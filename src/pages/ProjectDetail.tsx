@@ -202,7 +202,7 @@ export default function ProjectDetail() {
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(roleCounts).map(([role, count]) => (
                     <span key={role} className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
-                      {count} {role}
+                      {count as number} {role}
                     </span>
                   ))}
                 </div>
