@@ -44,6 +44,7 @@ export default function Dashboard() {
           {myProjects.map((p) => (
             <ProjectCard
               key={p.id}
+              id={p.id}
               name={p.name}
               completion={p.completion}
               status={p.status}
