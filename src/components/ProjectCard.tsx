@@ -1,8 +1,10 @@
 import { ProjectStatus } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectCardProps {
+  id: string;
   name: string;
   completion: number;
   status: ProjectStatus;
@@ -17,20 +19,23 @@ const statusConfig: Record<ProjectStatus, { label: string; className: string }> 
   delayed: { label: "Delayed", className: "bg-destructive/10 text-destructive" },
 };
 
-export default function ProjectCard({ name, completion, status, deadline, team, onUpdate }: ProjectCardProps) {
+export default function ProjectCard({ id, name, completion, status, deadline, team, onUpdate }: ProjectCardProps) {
+  const navigate = useNavigate();
   const { label, className } = statusConfig[status];
 
   return (
-    <div className="group bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div
+      onClick={() => navigate(`/projects/${id}`)}
+      className="group bg-card rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+    >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-card-foreground text-base leading-tight">{name}</h3>
+          <h3 className="font-semibold text-card-foreground text-base leading-tight group-hover:text-primary transition-colors">{name}</h3>
           <p className="text-xs text-muted-foreground mt-1">{team}</p>
         </div>
         <span className={cn("text-xs font-medium px-2.5 py-1 rounded-full", className)}>{label}</span>
       </div>
 
-      {/* Progress bar */}
       <div className="mb-3">
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-muted-foreground">Progress</span>
@@ -54,7 +59,10 @@ export default function ProjectCard({ name, completion, status, deadline, team, 
         </div>
         {onUpdate && (
           <button
-            onClick={onUpdate}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdate();
+            }}
             className="text-xs font-medium text-primary hover:text-primary/80 transition-colors active:scale-95"
           >
             Update Progress
