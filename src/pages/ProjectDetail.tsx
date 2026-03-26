@@ -3,7 +3,7 @@ import { useState } from "react";
 import { projects, ProjectTask, TaskStatus, ProjectStatus } from "@/data/mockData";
 import DashboardLayout from "@/components/DashboardLayout";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Calendar, CheckCircle2, Clock, AlertTriangle, Users, User, Pencil } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Clock, AlertTriangle, Users, User, Pencil, Brain, ShieldAlert, UserPlus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
