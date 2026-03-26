@@ -130,6 +130,44 @@ export default function ProjectDetail() {
           </div>
         </div>
 
+          </div>
+        </div>
+
+        {/* AI Predictions */}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Brain className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Estimated Completion</p>
+              <p className="text-lg font-bold text-foreground">
+                {project.completion === 100 ? "Completed" : `${estimatedDays} days remaining`}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <UserPlus className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Recommended Team Size</p>
+              <p className="text-lg font-bold text-foreground">{recommendedTeamSize} Developers</p>
+            </div>
+          </div>
+
+          <div className={cn("border rounded-2xl p-5 flex items-start gap-4", riskConfig[riskLevel].className)}>
+            <div className="w-10 h-10 rounded-xl bg-background/60 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-medium opacity-70 mb-1">Delay Risk</p>
+              <p className="text-lg font-bold">{riskConfig[riskLevel].label}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Main content grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Tasks — 2 cols */}
