@@ -127,6 +127,7 @@ export default function ProjectDetail() {
               <span className="font-semibold text-foreground">{project.completion}%</span>
             </div>
             <Progress value={project.completion} className="h-3" />
+          </div>
         </div>
 
         {/* AI Predictions */}
