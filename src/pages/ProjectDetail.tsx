@@ -47,6 +47,23 @@ export default function ProjectDetail() {
 
   const { label: statusLabel, className: statusClass, icon: StatusIcon } = statusConfig[project.status];
 
+  // AI Prediction mock calculations
+  const deadlineDate = new Date(project.deadline);
+  const today = new Date();
+  const daysRemaining = Math.max(0, Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  const remainingWork = 100 - project.completion;
+  const estimatedDays = project.completion === 100 ? 0 : Math.max(1, Math.ceil(daysRemaining * (remainingWork / Math.max(remainingWork, 30))));
+  const recommendedTeamSize = project.completion === 100 ? project.members.length : Math.max(project.members.length, Math.ceil(remainingWork / 20));
+  const riskLevel: "low" | "medium" | "high" =
+    project.status === "completed" ? "low" :
+    project.status === "delayed" ? "high" :
+    daysRemaining < 14 && project.completion < 70 ? "medium" : "low";
+  const riskConfig = {
+    low: { label: "Low Risk", className: "bg-success/10 text-success border-success/20" },
+    medium: { label: "Medium Risk", className: "bg-warning/10 text-warning border-warning/20" },
+    high: { label: "High Risk", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  };
+
   const openEditModal = (task: ProjectTask) => {
     setEditingTask(task);
     setTaskForm({ name: task.name, completion: task.completion, status: task.status, comments: "" });
