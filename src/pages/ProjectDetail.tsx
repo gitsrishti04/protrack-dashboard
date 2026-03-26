@@ -3,7 +3,7 @@ import { useState } from "react";
 import { projects, ProjectTask, TaskStatus, ProjectStatus } from "@/data/mockData";
 import DashboardLayout from "@/components/DashboardLayout";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, Calendar, CheckCircle2, Clock, AlertTriangle, Users, User, Pencil } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, Clock, AlertTriangle, Users, User, Pencil, Brain, ShieldAlert, UserPlus } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,23 @@ export default function ProjectDetail() {
   }
 
   const { label: statusLabel, className: statusClass, icon: StatusIcon } = statusConfig[project.status];
+
+  // AI Prediction mock calculations
+  const deadlineDate = new Date(project.deadline);
+  const today = new Date();
+  const daysRemaining = Math.max(0, Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)));
+  const remainingWork = 100 - project.completion;
+  const estimatedDays = project.completion === 100 ? 0 : Math.max(1, Math.ceil(daysRemaining * (remainingWork / Math.max(remainingWork, 30))));
+  const recommendedTeamSize = project.completion === 100 ? project.members.length : Math.max(project.members.length, Math.ceil(remainingWork / 20));
+  const riskLevel: "low" | "medium" | "high" =
+    project.status === "completed" ? "low" :
+    project.status === "delayed" ? "high" :
+    daysRemaining < 14 && project.completion < 70 ? "medium" : "low";
+  const riskConfig = {
+    low: { label: "Low Risk", className: "bg-success/10 text-success border-success/20" },
+    medium: { label: "Medium Risk", className: "bg-warning/10 text-warning border-warning/20" },
+    high: { label: "High Risk", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  };
 
   const openEditModal = (task: ProjectTask) => {
     setEditingTask(task);
@@ -110,6 +127,41 @@ export default function ProjectDetail() {
               <span className="font-semibold text-foreground">{project.completion}%</span>
             </div>
             <Progress value={project.completion} className="h-3" />
+          </div>
+        </div>
+
+        {/* AI Predictions */}
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Brain className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Estimated Completion</p>
+              <p className="text-lg font-bold text-foreground">
+                {project.completion === 100 ? "Completed" : `${estimatedDays} days remaining`}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <UserPlus className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Recommended Team Size</p>
+              <p className="text-lg font-bold text-foreground">{recommendedTeamSize} Developers</p>
+            </div>
+          </div>
+
+          <div className={cn("border rounded-2xl p-5 flex items-start gap-4", riskConfig[riskLevel].className)}>
+            <div className="w-10 h-10 rounded-xl bg-background/60 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-medium opacity-70 mb-1">Delay Risk</p>
+              <p className="text-lg font-bold">{riskConfig[riskLevel].label}</p>
+            </div>
           </div>
         </div>
 
