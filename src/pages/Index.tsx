@@ -1,9 +1,17 @@
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import Login from "./Login";
 
 export default function Index() {
-  const { isAuthenticated } = useAuth();
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
   return <Login />;
 }

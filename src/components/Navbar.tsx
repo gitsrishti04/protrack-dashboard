@@ -25,11 +25,14 @@ export default function Navbar() {
         {user && (
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium leading-tight">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{roleLabelMap[user.role]}</p>
+              <p className="text-sm font-medium leading-tight">{user.name || user.email}</p>
+              <p className="text-xs text-muted-foreground">
+                {roleLabelMap[user.role]}
+              </p>
             </div>
+
             <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
-              {user.name.split(" ").map((n) => n[0]).join("")}
+              {(user.name || user.email)[0].toUpperCase()}
             </div>
           </div>
         )}
