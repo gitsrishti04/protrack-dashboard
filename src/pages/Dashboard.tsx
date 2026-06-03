@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import KpiCard from "@/components/KpiCard";
-import { ProgressLineChart, WorkloadPieChart } from "@/components/ChartSection";
+import { ProgressLineChart, WorkloadPieChart, ResourceBarChart, TaskCompletionChart } from "@/components/ChartSection";
 import Chatbot from "@/components/Chatbot";
 import ProgressUpdateModal from "@/components/ProgressUpdateModal";
 import { useDashboard, useTeamLeadDashboard } from "@/hooks/useDashboard";
@@ -14,6 +14,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { Project, Task } from "@/types";
 import { usePredictions } from "@/hooks/usePredictions";
 import { calculatePredictionFeatures } from "@/lib/predictionUtils";
+import { toast } from "sonner";
 
 /* ─── status helpers ─── */
 const statusColor: Record<string, string> = {
@@ -87,9 +88,27 @@ function TeamLeadDashboard({ email }: { email: string }) {
   const [updateModal, setUpdateModal] = useState<{ open: boolean; projectId: number; projectName: string }>({
     open: false, projectId: 0, projectName: "",
   });
+  const alertedRef = useRef(false);
 
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
   const pendingTasks = tasks.filter((t) => t.status !== "completed").length;
+
+  // Notify team lead if any of their projects are delayed
+  useEffect(() => {
+    if (!loading && projects.length > 0 && !alertedRef.current) {
+      alertedRef.current = true;
+      const delayedProjects = projects.filter((p) => p.status === "delayed");
+      if (delayedProjects.length > 0) {
+        toast.warning(
+          `⚠️ ${delayedProjects.length} project${delayedProjects.length > 1 ? "s" : ""} need attention`,
+          {
+            description: delayedProjects.map((p) => p.name).join(", "),
+            duration: 7000,
+          }
+        );
+      }
+    }
+  }, [loading, projects]);
 
   const handleStatusChange = (taskId: number, newStatus: string) => {
     updateTaskStatus(taskId, newStatus);
@@ -318,6 +337,8 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ProgressLineChart />
             <WorkloadPieChart />
+            <ResourceBarChart />
+            <TaskCompletionChart />
           </div>
         )}
 

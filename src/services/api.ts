@@ -1,64 +1,73 @@
+import axios from "axios";
 import Cookies from "js-cookie";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
 /**
- * Centralized API fetch wrapper.
+ * Axios instance — centralized API client.
  * - Attaches Authorization header from cookie automatically.
- * - On 401, clears the cookie and reloads to the login page.
- * - Passes AbortSignal through for request cancellation.
+ * - On 401, clears the cookie and redirects to login.
  */
-export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
+const apiClient = axios.create({
+  baseURL: BASE_URL,
+});
+
+// ── Request interceptor — attach token ────────────────────────────────────
+apiClient.interceptors.request.use((config) => {
   const token = Cookies.get("token");
-
-  const isFormData =
-    options.body instanceof FormData ||
-    options.body instanceof URLSearchParams;
-
-  const headers: Record<string, string> = {};
-
-  if (!isFormData) {
-    headers["Content-Type"] = "application/json";
-  }
-
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
+  return config;
+});
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      ...headers,
-      ...((options.headers as Record<string, string>) || {}),
-    },
+// ── Response interceptor — handle 401 ────────────────────────────────────
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      Cookies.remove("token");
+      if (window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }
+    const message =
+      error.response?.data?.detail ||
+      error.response?.statusText ||
+      "API Error";
+    return Promise.reject(new Error(message));
+  }
+);
+
+/**
+ * Generic fetch wrapper using Axios — drop-in replacement for apiFetch.
+ */
+export const apiFetch = async (
+  endpoint: string,
+  options: {
+    method?: string;
+    body?: string | URLSearchParams | FormData;
+    headers?: Record<string, string>;
+    signal?: AbortSignal;
+  } = {}
+) => {
+  const { method = "GET", body, headers = {}, signal } = options;
+
+  // Determine content type
+  const isFormData =
+    body instanceof FormData || body instanceof URLSearchParams;
+
+  const response = await apiClient.request({
+    url: endpoint,
+    method,
+    data: body,
+    headers: isFormData
+      ? headers
+      : { "Content-Type": "application/json", ...headers },
+    signal,
   });
 
-  // ── 401 interceptor ──────────────────────────────────────────────────────
-  // Token expired or invalid — clear session and redirect to login.
-  if (res.status === 401) {
-    Cookies.remove("token");
-    // Only redirect if we're not already on the login page
-    if (!window.location.pathname.startsWith("/")) {
-      window.location.href = "/";
-    } else if (window.location.pathname !== "/") {
-      window.location.href = "/";
-    }
-    throw new Error("Session expired. Please log in again.");
-  }
-
-  if (!res.ok) {
-    let errorMessage = "API Error";
-    try {
-      const errorData = await res.json();
-      errorMessage = errorData.detail || errorMessage;
-    } catch {
-      // fallback to status text
-      errorMessage = res.statusText || errorMessage;
-    }
-    throw new Error(errorMessage);
-  }
-
-  return res.json();
+  return response.data;
 };
 
 // ── Domain helpers ────────────────────────────────────────────────────────
@@ -67,9 +76,11 @@ export const getDashboard = async (_token: string) => apiFetch("/dashboard");
 
 export const getWorkloadData = async (_token: string) => apiFetch("/workload");
 
+export const getResourceUtilization = async () =>
+  apiFetch("/resource-utilization");
+
 /**
  * Fetch projects for the current user.
- * The backend scopes results by role using the JWT — no email param needed.
  */
 export const getMyProjects = async (_token: string, _email: string) =>
   apiFetch("/projects?page=1&limit=100");
@@ -93,8 +104,6 @@ export const updateTaskStatus = async (
 
 /**
  * Fetch the current user's profile from the backend.
- * Uses /users/me — works for ALL roles (team_lead, admin, super_admin).
- * Falls back to null on any failure so the JWT values remain as fallback.
  */
 export const getCurrentUserProfile = async (): Promise<{
   id: number;
@@ -131,11 +140,10 @@ export interface CompletionTimePrediction {
   days_remaining: number;
 }
 
-export interface FullPrediction extends DelayRiskPrediction, CompletionTimePrediction {}
+export interface FullPrediction
+  extends DelayRiskPrediction,
+    CompletionTimePrediction {}
 
-/**
- * Get delay risk prediction for a project
- */
 export const predictDelayRisk = async (
   _token: string,
   data: PredictionInput
@@ -145,9 +153,6 @@ export const predictDelayRisk = async (
     body: JSON.stringify(data),
   });
 
-/**
- * Get completion time prediction for a project
- */
 export const predictCompletionTime = async (
   _token: string,
   data: PredictionInput
@@ -157,14 +162,42 @@ export const predictCompletionTime = async (
     body: JSON.stringify(data),
   });
 
-/**
- * Get both delay risk and completion time predictions
- */
 export const predictFull = async (
   _token: string,
   data: PredictionInput
 ): Promise<FullPrediction> =>
   apiFetch("/api/predictions/full-prediction", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+
+// ── Resource Allocation ───────────────────────────────────────────────────
+
+export interface ResourceAllocationInput {
+  project_type: number;
+  complexity: number;
+  total_tasks: number;
+  deadline_days: number;
+  has_frontend: number;
+  has_backend: number;
+  has_ml: number;
+  has_mobile: number;
+  has_devops: number;
+  has_database: number;
+}
+
+export interface ResourceAllocationResult {
+  required_developers: number;
+  estimated_days: number;
+  required_skill_sets: string[];
+  project_type_label: string;
+  complexity_label: string;
+}
+
+export const predictResourceAllocation = async (
+  data: ResourceAllocationInput
+): Promise<ResourceAllocationResult> =>
+  apiFetch("/api/predictions/resource-allocation", {
     method: "POST",
     body: JSON.stringify(data),
   });

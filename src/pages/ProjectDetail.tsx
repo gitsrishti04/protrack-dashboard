@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useProjectDetail } from "@/hooks/useProjectDetail";
@@ -7,6 +7,7 @@ import ProgressUpdateModal from "@/components/ProgressUpdateModal";
 import { ProgressUpdate } from "@/types";
 import { usePredictions } from "@/hooks/usePredictions";
 import { calculatePredictionFeatures } from "@/lib/predictionUtils";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Calendar,
@@ -63,6 +64,7 @@ export default function ProjectDetail() {
 
   // ── ML Predictions ──────────────────────────────────────────────────────
   const { fullPrediction, loading: predLoading, getFullPrediction } = usePredictions();
+  const alertedRef = useRef(false); // prevent duplicate toasts per page load
 
   useEffect(() => {
     if (!loading && tasks.length > 0) {
@@ -77,6 +79,22 @@ export default function ProjectDetail() {
       getFullPrediction(features);
     }
   }, [loading, tasks, members]);
+
+  // ── Delay notification ────────────────────────────────────────────────
+  useEffect(() => {
+    if (fullPrediction && !alertedRef.current && project) {
+      alertedRef.current = true;
+      if (fullPrediction.is_delayed === 1) {
+        toast.warning(
+          `⚠️ Delay Risk Detected — ${project.name}`,
+          {
+            description: `${(fullPrediction.probability_delayed * 100).toFixed(0)}% probability of delay. Est. ${fullPrediction.days_remaining} days remaining.`,
+            duration: 6000,
+          }
+        );
+      }
+    }
+  }, [fullPrediction, project]);
 
   const [taskForm, setTaskForm] = useState({
     title: "",

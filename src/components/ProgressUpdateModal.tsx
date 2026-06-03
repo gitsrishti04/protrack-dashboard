@@ -52,13 +52,18 @@ export default function ProgressUpdateModal({
 
     setLoading(true);
     try {
-      // Update project completion percentage
+      // Update project completion percentage + save history to DB
       await apiFetch(`/projects/${projectId}/progress`, {
         method: "PUT",
-        body: JSON.stringify({ progress: Number(completionPct) }),
+        body: JSON.stringify({
+          progress: Number(completionPct),
+          task_name: taskName || "Progress update",
+          comments: comments || "",
+          status: status,
+        }),
       });
 
-      // Persist history entry locally (backend has no GET history endpoint)
+      // Also keep localStorage as fallback for the timeline view
       const historyKey = `progress_history_${projectId}`;
       const existing: ProgressUpdate[] = JSON.parse(localStorage.getItem(historyKey) || "[]");
       existing.push({

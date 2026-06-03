@@ -1,26 +1,30 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, Loader2 } from "lucide-react";
+
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>();
 
-    //  FIXED: removed role
-    const success = await login(email, password);
-
+  const onSubmit = async (data: LoginFormValues) => {
+    const success = await login(data.email, data.password);
     if (success) {
       navigate("/dashboard");
     } else {
-      alert("Invalid credentials");
+      setError("root", { message: "Invalid email or password" });
     }
   };
 
@@ -30,7 +34,11 @@ export default function Login() {
 
         {/* Logo */}
         <div className="flex flex-col items-center justify-center mb-8">
-          <img src="/logo.png" alt="ProTrack AI Logo" className="w-24 h-24 mb-2 object-contain" />
+          <img
+            src="/logo.png"
+            alt="ProTrack AI Logo"
+            className="w-24 h-24 mb-2 object-contain"
+          />
           <span className="text-xl font-bold tracking-tight text-foreground">
             ProTrack AI
           </span>
@@ -44,45 +52,75 @@ export default function Login() {
             Sign in to your account
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Email</label>
+              <label className="text-xs font-medium text-foreground">
+                Email
+              </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  required
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: "Enter a valid email address",
+                    },
+                  })}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:ring-2 focus:ring-ring transition-shadow"
                 />
               </div>
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Password</label>
+              <label className="text-xs font-medium text-foreground">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
+                  })}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:ring-2 focus:ring-ring transition-shadow"
                 />
               </div>
+              {errors.password && (
+                <p className="text-xs text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
+
+            {/* Root error */}
+            {errors.root && (
+              <p className="text-xs text-destructive text-center">
+                {errors.root.message}
+              </p>
+            )}
+
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+              disabled={isSubmitting}
+              className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Sign In
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Signing in…" : "Sign In"}
             </button>
 
           </form>

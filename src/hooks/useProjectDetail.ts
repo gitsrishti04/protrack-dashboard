@@ -35,17 +35,23 @@ export function useProjectDetail(id: string | undefined): UseProjectDetailReturn
     setLoading(true);
     setError(null);
     try {
-      const [projectData, tasksData, membersData] = await Promise.all([
+      const [projectData, tasksData, membersData, historyData] = await Promise.all([
         apiFetch(`/projects/${id}`),
         apiFetch(`/projects/${id}/tasks`),
         apiFetch(`/projects/${id}/members`),
+        apiFetch(`/projects/${id}/history`).catch(() => []),
       ]);
       setProject(projectData);
       setTasks(tasksData);
       setMembers(membersData);
 
-      const stored = localStorage.getItem(`progress_history_${id}`);
-      setProgressHistory(stored ? JSON.parse(stored) : []);
+      // Use DB history if available, fall back to localStorage
+      if (historyData && historyData.length > 0) {
+        setProgressHistory(historyData);
+      } else {
+        const stored = localStorage.getItem(`progress_history_${id}`);
+        setProgressHistory(stored ? JSON.parse(stored) : []);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load project");
     } finally {

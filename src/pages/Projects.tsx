@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useAuth } from "@/context/AuthContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProjectCard from "@/components/ProjectCard";
@@ -24,8 +25,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ResourceAllocationCard from "@/components/ResourceAllocationCard";
 
 type ProjectStatus = "on_track" | "delayed" | "completed";
+
+interface ProjectFormValues {
+  name: string;
+  description: string;
+  team: string;
+  deadline: string;
+  status: ProjectStatus;
+}
 
 interface Project {
   id: number;
@@ -75,19 +85,24 @@ export default function Projects() {
 
   const [openProjectModal, setOpenProjectModal] = useState(false);
 
-  const [projectForm, setProjectForm] = useState({
-    name: "",
-    description: "",
-    status: "on_track",
-    completion: 0,
-    deadline: "",
-    team: "",
+  const {
+    register: registerProject,
+    handleSubmit: handleProjectSubmit,
+    control: projectControl,
+    watch: watchProject,
+    reset: resetProject,
+    formState: { errors: projectErrors, isSubmitting: isProjectSubmitting },
+  } = useForm<ProjectFormValues>({
+    defaultValues: { name: "", description: "", team: "", deadline: "", status: "on_track" },
   });
 
+  const watchedDeadline = watchProject("deadline");
+
   // ================= CREATE PROJECT =================
-  const handleCreateProject = async () => {
-    await createProject(projectForm);
+  const handleCreateProject = async (data: ProjectFormValues) => {
+    await createProject(data);
     setOpenProjectModal(false);
+    resetProject();
   };
 
   // ================= GUARD =================
@@ -236,64 +251,67 @@ export default function Projects() {
             <DialogTitle>Create Project</DialogTitle>
           </DialogHeader>
 
-          <Input
-            placeholder="Project Name"
-            value={projectForm.name}
-            onChange={(e) =>
-              setProjectForm({ ...projectForm, name: e.target.value })
-            }
-          />
+          <form onSubmit={handleProjectSubmit(handleCreateProject)} className="space-y-3">
+            <div>
+              <Input
+                placeholder="Project Name *"
+                {...registerProject("name", { required: "Project name is required" })}
+              />
+              {projectErrors.name && (
+                <p className="text-xs text-destructive mt-1">{projectErrors.name.message}</p>
+              )}
+            </div>
 
-          <Textarea
-            placeholder="Description"
-            value={projectForm.description}
-            onChange={(e) =>
-              setProjectForm({
-                ...projectForm,
-                description: e.target.value,
-              })
-            }
-          />
+            <Textarea
+              placeholder="Description"
+              {...registerProject("description")}
+            />
 
-          <Input
-            placeholder="Team"
-            value={projectForm.team}
-            onChange={(e) =>
-              setProjectForm({ ...projectForm, team: e.target.value })
-            }
-          />
+            <Input
+              placeholder="Team"
+              {...registerProject("team")}
+            />
 
-          <Input
-            type="date"
-            value={projectForm.deadline}
-            onChange={(e) =>
-              setProjectForm({
-                ...projectForm,
-                deadline: e.target.value,
-              })
-            }
-          />
+            <div>
+              <Input
+                type="date"
+                {...registerProject("deadline", { required: "Deadline is required" })}
+              />
+              {projectErrors.deadline && (
+                <p className="text-xs text-destructive mt-1">{projectErrors.deadline.message}</p>
+              )}
+            </div>
 
-          <Select
-            value={projectForm.status}
-            onValueChange={(v) =>
-              setProjectForm({ ...projectForm, status: v })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
+            <Controller
+              name="status"
+              control={projectControl}
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on_track">On Track</SelectItem>
+                    <SelectItem value="delayed">Delayed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+            />
 
-            <SelectContent>
-              <SelectItem value="on_track">On Track</SelectItem>
-              <SelectItem value="delayed">Delayed</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
+            {/* AI Resource Allocation Prediction */}
+            <ResourceAllocationCard
+              deadlineDays={
+                watchedDeadline
+                  ? Math.max(1, Math.ceil((new Date(watchedDeadline).getTime() - Date.now()) / 86400000))
+                  : 90
+              }
+            />
 
-          <Button onClick={handleCreateProject}>
-            Create Project
-          </Button>
+            <Button type="submit" className="w-full" disabled={isProjectSubmitting}>
+              {isProjectSubmitting ? "Creating…" : "Create Project"}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
 
