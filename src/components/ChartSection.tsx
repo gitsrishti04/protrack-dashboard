@@ -188,11 +188,11 @@ export function WorkloadPieChart() {
   useEffect(() => {
     getWorkloadData("")
       .then((data) => {
-        const limited = data.slice(0, 8);
+        const limited = data.slice(0, 6);
         setWorkloadData(
           limited.map((d: { name: string; value: number; tasks: number }) => ({
             ...d,
-            name: d.name.length > 14 ? d.name.slice(0, 12) + "…" : d.name,
+            name: d.name.length > 10 ? d.name.split(" ")[0] : d.name,
           }))
         );
       })
@@ -210,14 +210,14 @@ export function WorkloadPieChart() {
           No task assignments found
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={workloadData}
-              cx="50%"
-              cy="45%"
-              outerRadius={70}
-              innerRadius={40}
+              cx="35%"
+              cy="50%"
+              outerRadius={80}
+              innerRadius={45}
               dataKey="value"
               nameKey="name"
               paddingAngle={3}
@@ -235,10 +235,10 @@ export function WorkloadPieChart() {
               }}
             />
             <Legend
-              layout="horizontal"
-              verticalAlign="bottom"
-              align="center"
-              wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+              layout="vertical"
+              verticalAlign="middle"
+              align="right"
+              wrapperStyle={{ fontSize: 11, paddingLeft: 10 }}
             />
           </PieChart>
         </ResponsiveContainer>
