@@ -187,7 +187,15 @@ export function WorkloadPieChart() {
 
   useEffect(() => {
     getWorkloadData("")
-      .then(setWorkloadData)
+      .then((data) => {
+        const limited = data.slice(0, 8);
+        setWorkloadData(
+          limited.map((d: { name: string; value: number; tasks: number }) => ({
+            ...d,
+            name: d.name.length > 14 ? d.name.slice(0, 12) + "…" : d.name,
+          }))
+        );
+      })
       .catch((err) => console.error("Failed to load workload data:", err))
       .finally(() => setLoading(false));
   }, []);
@@ -207,9 +215,9 @@ export function WorkloadPieChart() {
             <Pie
               data={workloadData}
               cx="50%"
-              cy="50%"
-              outerRadius={90}
-              innerRadius={50}
+              cy="45%"
+              outerRadius={70}
+              innerRadius={40}
               dataKey="value"
               nameKey="name"
               paddingAngle={3}
@@ -226,7 +234,12 @@ export function WorkloadPieChart() {
                 return [`${tasks} task${tasks !== 1 ? "s" : ""}`, name];
               }}
             />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Legend
+              layout="horizontal"
+              verticalAlign="bottom"
+              align="center"
+              wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+            />
           </PieChart>
         </ResponsiveContainer>
       )}
