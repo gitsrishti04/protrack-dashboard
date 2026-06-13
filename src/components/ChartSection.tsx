@@ -180,22 +180,14 @@ export function TaskCompletionChart() {
   );
 }
 
-// ── Team Workload Distribution pie (already live) ─────────────────────────
+// ── Team Workload Distribution pie ────────────────────────────────────────
 export function WorkloadPieChart() {
   const [workloadData, setWorkloadData] = useState<{ name: string; value: number; tasks: number }[]>([]);
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
     getWorkloadData("")
-      .then((data) => {
-        const limited = data.slice(0, 6);
-        setWorkloadData(
-          limited.map((d: { name: string; value: number; tasks: number }) => ({
-            ...d,
-            name: d.name.length > 10 ? d.name.split(" ")[0] : d.name,
-          }))
-        );
-      })
+      .then(setWorkloadData)
       .catch((err) => console.error("Failed to load workload data:", err))
       .finally(() => setLoading(false));
   }, []);
@@ -210,38 +202,48 @@ export function WorkloadPieChart() {
           No task assignments found
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={workloadData}
-              cx="35%"
-              cy="50%"
-              outerRadius={80}
-              innerRadius={45}
-              dataKey="value"
-              nameKey="name"
-              paddingAngle={3}
-              strokeWidth={0}
-            >
-              {workloadData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              contentStyle={{ borderRadius: 12, border: "1px solid hsl(214,20%,90%)", fontSize: 13 }}
-              formatter={(_value: number, name: string, props: { payload: { tasks?: number } }) => {
-                const tasks = props.payload.tasks ?? 0;
-                return [`${tasks} task${tasks !== 1 ? "s" : ""}`, name];
-              }}
-            />
-            <Legend
-              layout="vertical"
-              verticalAlign="middle"
-              align="right"
-              wrapperStyle={{ fontSize: 11, paddingLeft: 10 }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        <div className="flex gap-4 h-[340px]">
+          <div className="w-[45%] shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={workloadData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  innerRadius={50}
+                  dataKey="value"
+                  nameKey="name"
+                  paddingAngle={3}
+                  strokeWidth={0}
+                >
+                  {workloadData.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ borderRadius: 12, border: "1px solid hsl(214,20%,90%)", fontSize: 13 }}
+                  formatter={(_value: number, name: string, props: { payload: { tasks?: number } }) => {
+                    const tasks = props.payload.tasks ?? 0;
+                    return [`${tasks} task${tasks !== 1 ? "s" : ""}`, name];
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-1 space-y-1.5">
+            {workloadData.map((entry, i) => (
+              <div key={entry.name} className="flex items-center gap-2 text-xs">
+                <span
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                />
+                <span className="truncate text-foreground">{entry.name}</span>
+                <span className="ml-auto shrink-0 text-muted-foreground tabular-nums">{entry.tasks}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
