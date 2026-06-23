@@ -31,6 +31,9 @@ export interface DashboardData {
   completed: number;
   delayed: number;
   on_track: number;
+  activeProjects: number;
+  completionRate: number;
+  avgResourceUtil: number;
   role: string;
 }
 
