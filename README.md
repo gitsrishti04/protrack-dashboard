@@ -235,9 +235,9 @@ After running the backend for the first time, create users via the `/register` e
 
 | Email | Password | Role |
 |-------|----------|------|
-| `superadmin@protrack.com` | `password123` | Super Admin |
-| `admin@test.com` | `password123` | Admin |
-| `teamlead@protrack.com` | `password123` | Team Lead |
+| `superadmin@test.com` | `123456` | Super Admin |
+| `admin@test.com` | `123456` | Admin |
+| `teamlead@test.com | `123456` | Team Lead |
 
 To create a Super Admin manually:
 
