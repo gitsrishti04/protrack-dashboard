@@ -112,10 +112,15 @@ export default function Chatbot() {
             >
               {msg.role === "ai" ? (
                 <ReactMarkdown
-                  className="prose prose-sm dark:prose-invert max-w-none
-                    prose-p:my-1 prose-ul:my-1 prose-ol:my-1
-                    prose-li:my-0 prose-headings:my-1
-                    prose-strong:font-semibold"
+                  components={{
+                    p: ({ children }) => <p className="my-1">{children}</p>,
+                    ul: ({ children }) => <ul className="my-1 list-disc pl-4">{children}</ul>,
+                    ol: ({ children }) => <ol className="my-1 list-decimal pl-4">{children}</ol>,
+                    li: ({ children }) => <li className="my-0">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    h3: ({ children }) => <h3 className="font-semibold text-sm mt-2">{children}</h3>,
+                    h4: ({ children }) => <h4 className="font-semibold text-sm mt-1">{children}</h4>,
+                  }}
                 >
                   {msg.content}
                 </ReactMarkdown>
