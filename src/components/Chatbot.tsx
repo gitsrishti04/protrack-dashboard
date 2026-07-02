@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Bot, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/services/api";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   id: string;
@@ -100,22 +101,27 @@ export default function Chatbot() {
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              "flex",
-              msg.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
+          <div className="flex" key={msg.id}>
             <div
               className={cn(
-                "max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap",
+                "max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
                 msg.role === "user"
-                  ? "bg-primary text-primary-foreground rounded-br-md"
+                  ? "ml-auto bg-primary text-primary-foreground rounded-br-md"
                   : "bg-muted text-foreground rounded-bl-md"
               )}
             >
-              {msg.content}
+              {msg.role === "ai" ? (
+                <ReactMarkdown
+                  className="prose prose-sm dark:prose-invert max-w-none
+                    prose-p:my-1 prose-ul:my-1 prose-ol:my-1
+                    prose-li:my-0 prose-headings:my-1
+                    prose-strong:font-semibold"
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              ) : (
+                msg.content
+              )}
             </div>
           </div>
         ))}
