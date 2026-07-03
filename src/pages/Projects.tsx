@@ -130,12 +130,14 @@ export default function Projects() {
             </p>
           </div>
 
-          <button
-            onClick={() => setOpenProjectModal(true)}
-            className="bg-primary text-white px-4 py-2 rounded-lg text-sm"
-          >
-            + Create Project
-          </button>
+          {user.role !== "team_lead" && (
+            <button
+              onClick={() => setOpenProjectModal(true)}
+              className="bg-primary text-white px-4 py-2 rounded-lg text-sm"
+            >
+              + Create Project
+            </button>
+          )}
         </div>
 
         {/* SEARCH + STATUS FILTER */}
@@ -244,7 +246,8 @@ export default function Projects() {
         />
       </div>
 
-      {/* CREATE PROJECT MODAL */}
+      {/* CREATE PROJECT MODAL — Admin/Super Admin only */}
+      {user.role !== "team_lead" && (
       <Dialog open={openProjectModal} onOpenChange={setOpenProjectModal}>
         <DialogContent>
           <DialogHeader>
@@ -314,6 +317,7 @@ export default function Projects() {
           </form>
         </DialogContent>
       </Dialog>
+      )}
 
       {/*  FIXED MODAL */}
       <ProgressUpdateModal
